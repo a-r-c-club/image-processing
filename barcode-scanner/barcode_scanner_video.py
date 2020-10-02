@@ -58,7 +58,8 @@ while True:
                         c1=int((x+x+w)/2)
                         c2=int((y+y+h)/2)
                         cv2.circle(frame,(c1,c2),2,(0,0,255),8)
-                        x_dist = int(distance.euclidean((c1,c2), (320,240)))
+                        #x_dist = int(distance.euclidean((c1,c2), (320,240)))
+                        x_dist = int(320 - c1)                                  #to get signed values instead of absolute
                         cv2.putText(frame, f"distance: {x_dist}",(20,50),cv2.FONT_HERSHEY_COMPLEX, 2, (0,0,255), 2 ,5)
                         # draw the barcode data and barcode type on the image
                         #print(f"dtype:{type(x_dist)}, dist = {x_dist}")
