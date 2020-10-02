@@ -8,7 +8,8 @@ import argparse
 import datetime
 import imutils
 import time
-from scipy.spatial import distance
+import serial
+#from scipy.spatial import distance
 import math 
 import cv2
 
@@ -18,6 +19,10 @@ ap.add_argument("-o", "--output", type=str, default="barcodes.csv",
 help="path to output CSV file containing barcodes")
 args = vars(ap.parse_args())
 
+#accesing USB port for data transmission from Rpi to STM32
+
+arduino = serial.Serial('/dev/ttyACM0',9600)  #baud rate used is 9600 (STM32 shd also have this baud rate)
+print('serial port initialised...')
 # initialize the video stream and allow the camera sensor to warm up
 print("[INFO] starting video stream...")
 # vs = VideoStream(src=0).start()
@@ -39,7 +44,7 @@ while True:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # find the barcodes in the frame and decode each of the barcodes
         barcodes = pyzbar.decode(frame)
-        cv2.circle(frame,(320,240),2,(0,0,255),8)
+        cv2.circle(frame,(320,240),2,(0,0,255),8)   #center circle
         #cv2.circle(frame,(320,240),2,(0,0,255),4)
         #loop over the detected barcodes
         for barcode in barcodes:
@@ -57,8 +62,19 @@ while True:
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
                         c1=int((x+x+w)/2)
                         c2=int((y+y+h)/2)
-                        cv2.circle(frame,(c1,c2),2,(0,0,255),8)
-                        x_dist = int(distance.euclidean((c1,c2), (320,240)))
+                        cv2.circle(frame,(c1,c2),2,(0,0,255),8) #target circle
+                        #x_dist = int(distance.euclidean((c1,c2), (320,240)))
+                        x_dist = int(320-c1)  #distance between center and target (positive and negative)
+                        
+                        #transmitting data via Rpi USB port 
+                        
+                        # if distance < 0 move left if dist > 0 move right
+                        # if dist == 0 no movement required
+                        if x_dist<0:
+                            arduino.write('0'.encode())
+                        elif x_dist>0:
+                            arduino.write('1'.encode())
+                            
                         cv2.putText(frame, f"distance: {x_dist}",(20,50),cv2.FONT_HERSHEY_COMPLEX, 2, (0,0,255), 2 ,5)
                         # draw the barcode data and barcode type on the image
                         #print(f"dtype:{type(x_dist)}, dist = {x_dist}")
